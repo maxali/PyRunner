@@ -314,6 +314,20 @@ PyRunner uses a three-layer architecture:
 
 ## Production Deployment
 
+### Azure Container Apps (Recommended)
+
+PyRunner is optimized for Azure Container Apps deployment with automated CI/CD:
+
+```bash
+# Quick setup
+./scripts/setup-azure.sh
+
+# Deploy via GitHub Actions
+git push origin main
+```
+
+See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for detailed deployment instructions.
+
 ### Docker Compose Production
 
 ```yaml
