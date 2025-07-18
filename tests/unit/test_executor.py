@@ -134,7 +134,9 @@ class TestCodeExecutor:
                 mock_process.returncode = 0
                 mock_subprocess.return_value = mock_process
                 
-                with patch.object(CodeExecutor, '_monitor_memory', return_value=10.0):
+                with patch.object(CodeExecutor, '_monitor_memory') as mock_monitor:
+                    # Mock the memory monitor to raise CancelledError when cancelled
+                    mock_monitor.side_effect = asyncio.CancelledError()
                     with patch('os.unlink'):
                         status, stdout, stderr, exec_time, memory_used = await CodeExecutor.execute("print('Hello World')")
                         
@@ -161,7 +163,9 @@ class TestCodeExecutor:
                 mock_process.returncode = 1
                 mock_subprocess.return_value = mock_process
                 
-                with patch.object(CodeExecutor, '_monitor_memory', return_value=5.0):
+                with patch.object(CodeExecutor, '_monitor_memory') as mock_monitor:
+                    # Mock the memory monitor to raise CancelledError when cancelled
+                    mock_monitor.side_effect = asyncio.CancelledError()
                     with patch('os.unlink'):
                         status, stdout, stderr, exec_time, memory_used = await CodeExecutor.execute("raise ValueError('Test error')")
                         
@@ -285,7 +289,9 @@ class TestCodeExecutor:
                 mock_process.returncode = 0
                 mock_subprocess.return_value = mock_process
                 
-                with patch.object(CodeExecutor, '_monitor_memory', return_value=100.0):
+                with patch.object(CodeExecutor, '_monitor_memory') as mock_monitor:
+                    # Mock the memory monitor to raise CancelledError when cancelled
+                    mock_monitor.side_effect = asyncio.CancelledError()
                     with patch('os.unlink'):
                         status, stdout, stderr, exec_time, memory_used = await CodeExecutor.execute(
                             "print('Test output')", 
@@ -301,4 +307,4 @@ class TestCodeExecutor:
                         assert memory_used is None
                         
                         # Verify memory limit was passed to monitor
-                        CodeExecutor._monitor_memory.assert_called_once_with(12345, 1024)
+                        mock_monitor.assert_called_once_with(12345, 1024)
