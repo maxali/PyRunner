@@ -113,14 +113,15 @@ jobs:
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     
     - name: Deploy Azure infrastructure
-      uses: azure/arm-deploy@v2
+      uses: azure/cli@v2
       with:
-        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        template: ./infra/main.bicep
-        parameters: ./infra/parameters.json containerImage=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        scope: resourcegroup
-        failOnStdErr: false
+        azcliversion: '2.72.0'
+        inlineScript: |
+          az deployment group create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --template-file ./infra/main.bicep \
+            --parameters ./infra/parameters.json \
+            --parameters containerImage=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
     
     - name: Update Container App
       run: |
@@ -149,14 +150,15 @@ jobs:
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     - name: Deploy Azure infrastructure
-      uses: azure/arm-deploy@v2
+      uses: azure/cli@v2
       with:
-        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP_PROD }}
-        template: ./infra/main.bicep
-        parameters: ./infra/parameters.prod.json containerImage=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        scope: resourcegroup
-        failOnStdErr: false
+        azcliversion: '2.72.0'
+        inlineScript: |
+          az deployment group create \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_PROD }} \
+            --template-file ./infra/main.bicep \
+            --parameters ./infra/parameters.prod.json \
+            --parameters containerImage=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
     - name: Update Container App
       run: |
