@@ -66,12 +66,6 @@ resource containerRegistryIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: containerAppName
   location: location
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${containerRegistryIdentity.id}': {}
-    }
-  }
   properties: {
     managedEnvironmentId: containerAppEnvironment.id
     configuration: {
@@ -87,12 +81,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
           }
         ]
       }
-      registries: [
-        {
-          server: 'ghcr.io'
-          identity: containerRegistryIdentity.id
-        }
-      ]
+      registries: []
     }
     template: {
       revisionSuffix: 'v${uniqueString(deployment().name)}'
