@@ -9,7 +9,7 @@
       "value": "pyrunner-env-prod"
     },
     "containerImage": {
-      "value": "ghcr.io/gbmoalab/pyrunner:latest"
+      "value": "ghcr.io/maxali/pyrunner:latest"
     },
     "minReplicas": {
       "value": 2

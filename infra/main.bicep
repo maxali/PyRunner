@@ -66,9 +66,6 @@ resource containerRegistryIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
 resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
   name: containerAppName
   location: location
-  dependsOn: [
-    containerRegistryIdentity
-  ]
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
