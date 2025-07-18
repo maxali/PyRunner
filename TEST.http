@@ -1,0 +1,6 @@
+POST http://localhost:8000/run
+Content-Type: application/json
+
+{
+  "code": "import sympy as sp\n\n# Define symbols\nx, y, z = sp.symbols('x y z')\n\n# Example 1: Solve quadratic equation\nequation1 = sp.Eq(x**2 + 5*x + 6, 0)\nsolution1 = sp.solve(equation1, x)\nprint(f'Quadratic solution: {solution1}')\n\n# Example 2: Solve system of equations\neq1 = sp.Eq(2*x + 3*y, 7)\neq2 = sp.Eq(x - y, 1)\nsystem_solution = sp.solve([eq1, eq2], [x, y])\nprint(f'System solution: {system_solution}')\n\n# Example 3: Solve polynomial equation\npoly_eq = sp.Eq(x**3 - 6*x**2 + 11*x - 6, 0)\npoly_solution = sp.solve(poly_eq, x)\nprint(f'Polynomial solution: {poly_solution}')\n\n# Example 4: Symbolic differentiation and integration\nf = x**3 + 2*x**2 + x + 1\nderivative = sp.diff(f, x)\nintegral = sp.integrate(f, x)\nprint(f'Derivative: {derivative}')\nprint(f'Integral: {integral}')"
+}
