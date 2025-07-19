@@ -26,6 +26,15 @@ curl http://localhost:8000/                                    # Health check
 curl -X POST http://localhost:8000/run \                      # Execute code
   -H "Content-Type: application/json" \
   -d '{"code": "print(\"Hello\")", "timeout": 30}'
+
+# Auto-print feature (NEW)
+curl -X POST http://localhost:8000/run \
+  -H "Content-Type: application/json" \
+  -d '{"code": "2 + 3", "auto_print": true}'                  # Outputs: 5
+
+curl -X POST http://localhost:8000/run \
+  -H "Content-Type: application/json" \
+  -d '{"code": "2 + 3", "auto_print": false}'                 # No output
 ```
 
 ### Running Tests
@@ -48,6 +57,58 @@ python -m pytest tests/unit/test_security.py::test_blocked_imports -v
 # Using the test runner script
 python scripts/run_tests.py --all --coverage --report
 ```
+
+## Auto-Print Feature (NEW)
+
+PyRunner now includes an auto-print feature that mimics Python's interactive mode behavior. When enabled (default), the last expression in your code will be automatically printed if it's not already being printed.
+
+### How It Works
+
+The auto-print feature:
+- Automatically prints the value of the last expression in your code
+- Only triggers for expressions (not assignments, function definitions, or control structures)
+- Skips None values to avoid clutter
+- Can be disabled via the `auto_print` parameter
+
+### Examples
+
+**With auto-print enabled (default):**
+```python
+# Input:
+from sympy import symbols, solve
+x = symbols('x')
+equation = x**2 + 4*x + 6
+solutions = solve(equation, x)
+solutions  # This will be automatically printed
+
+# Output:
+[-2 - sqrt(2)*I, -2 + sqrt(2)*I]
+```
+
+**With auto-print disabled:**
+```json
+{
+  "code": "2 + 3",
+  "auto_print": false
+}
+// Output: (empty)
+```
+
+### When Auto-Print Triggers
+
+Auto-print WILL trigger for:
+- Simple expressions: `2 + 3`
+- Variable references: `my_variable`
+- Function calls that return values: `math.sqrt(16)`
+- Complex expressions: `[x**2 for x in range(5)]`
+
+Auto-print WON'T trigger for:
+- Assignments: `x = 5`
+- Function/class definitions
+- Import statements
+- Control structures (if/for/while)
+- Expressions that are already printed
+- None values
 
 ## Architecture Deep Dive
 

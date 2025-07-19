@@ -5,6 +5,7 @@ import time
 import psutil
 import os
 import signal
+import ast
 from typing import Tuple, Optional
 from app.models import ExecutionStatus
 
@@ -13,16 +14,89 @@ class CodeExecutor:
     """Executes Python code in an isolated subprocess with resource limits"""
     
     @staticmethod
-    async def execute(code: str, timeout: int = 30, memory_limit: int = 512) -> Tuple[ExecutionStatus, str, str, float, Optional[float]]:
+    def wrap_code_with_auto_print(code: str, auto_print: bool = True) -> str:
+        """
+        Wrap code to automatically print the last expression if auto_print is True.
+        This mimics Python's interactive mode behavior.
+        """
+        if not auto_print or not code.strip():
+            return code
+        
+        try:
+            # Parse the code into an AST
+            tree = ast.parse(code)
+            
+            # If the tree is empty or has no body, return original code
+            if not tree.body:
+                return code
+            
+            # Get the last statement
+            last_stmt = tree.body[-1]
+            
+            # Check if the last statement is an expression
+            if isinstance(last_stmt, ast.Expr):
+                # Check if it's already a print statement
+                if isinstance(last_stmt.value, ast.Call):
+                    if isinstance(last_stmt.value.func, ast.Name) and last_stmt.value.func.id == 'print':
+                        # Already a print statement, don't modify
+                        return code
+                
+                # Get the line number info for proper code reconstruction
+                last_line_start = last_stmt.lineno - 1
+                code_lines = code.splitlines()
+                
+                # Find the actual expression text (handling multi-line expressions)
+                expr_lines = []
+                for i in range(last_line_start, len(code_lines)):
+                    expr_lines.append(code_lines[i])
+                    # Try to parse just this expression to see if it's complete
+                    try:
+                        ast.parse('\n'.join(expr_lines), mode='eval')
+                        break
+                    except SyntaxError:
+                        # Expression continues on next line
+                        continue
+                
+                # Reconstruct the code with the wrapped expression
+                new_lines = code_lines[:last_line_start]
+                
+                # Create the print wrapper
+                expr_text = '\n'.join(expr_lines)
+                # Handle proper indentation
+                indent = len(expr_lines[0]) - len(expr_lines[0].lstrip())
+                indent_str = ' ' * indent
+                
+                # Add the wrapped expression
+                new_lines.append(f"{indent_str}__auto_print_result = {expr_text}")
+                new_lines.append(f"{indent_str}if __auto_print_result is not None:")
+                new_lines.append(f"{indent_str}    print(__auto_print_result)")
+                
+                return '\n'.join(new_lines)
+            
+        except SyntaxError:
+            # If there's a syntax error, return the original code
+            # The error will be caught during execution
+            pass
+        except Exception:
+            # For any other parsing errors, return original code
+            pass
+        
+        return code
+    
+    @staticmethod
+    async def execute(code: str, timeout: int = 30, memory_limit: int = 512, auto_print: bool = True) -> Tuple[ExecutionStatus, str, str, float, Optional[float]]:
         """
         Execute Python code with timeout and memory limits.
         Returns (status, stdout, stderr, execution_time, memory_used)
         """
         start_time = time.time()
         
+        # Wrap code with auto-print if enabled
+        wrapped_code = CodeExecutor.wrap_code_with_auto_print(code, auto_print)
+        
         # Create temporary file for code
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-            f.write(code)
+            f.write(wrapped_code)
             temp_file = f.name
         
         try:

@@ -83,7 +83,8 @@ async def run_code(request: CodeRequest):
         status, stdout, stderr, exec_time, memory_used = await CodeExecutor.execute(
             request.code,
             timeout=request.timeout,
-            memory_limit=request.memory_limit
+            memory_limit=request.memory_limit,
+            auto_print=request.auto_print
         )
         
         logger.info(f"Code execution completed: status={status}, time={exec_time:.3f}s")

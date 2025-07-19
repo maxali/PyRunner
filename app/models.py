@@ -11,7 +11,27 @@ class ExecutionStatus(str, Enum):
 
 
 class CodeRequest(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(
+        extra='forbid',
+        json_schema_extra = {
+            "examples": [
+                {
+                    "title": "Simple calculation with auto-print",
+                    "code": "import math\nmath.pi * 2",
+                    "timeout": 30,
+                    "memory_limit": 512,
+                    "auto_print": True
+                },
+                {
+                    "title": "Calculation without auto-print",
+                    "code": "result = 5 * 10\nprint(f'Result: {result}')",
+                    "timeout": 30,
+                    "memory_limit": 512,
+                    "auto_print": False
+                }
+            ]
+        }
+    )
     
     code: str = Field(..., description="Python code to execute")
     timeout: Optional[int] = Field(
@@ -25,6 +45,10 @@ class CodeRequest(BaseModel):
         ge=64,
         le=2048,
         description="Memory limit in MB (64-2048)"
+    )
+    auto_print: Optional[bool] = Field(
+        default=True,
+        description="Automatically print the last expression if it's not already printed"
     )
     
     @field_validator('code')
