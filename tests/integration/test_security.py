@@ -98,6 +98,28 @@ class TestAllowedModules:
     
     @pytest.mark.integration
     @pytest.mark.security
+    async def test_io_stringio_import(self, api_client: httpx.AsyncClient):
+        """Test StringIO from io is allowed"""
+        payload = {"code": "from io import StringIO\ns = StringIO('Hello World')\nprint(f'StringIO content: {s.read()}')"}
+        response = await api_client.post("/run", json=payload)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert_success_response(data, "StringIO content: Hello World")
+    
+    @pytest.mark.integration
+    @pytest.mark.security
+    async def test_io_bytesio(self, api_client: httpx.AsyncClient):
+        """Test BytesIO is allowed"""
+        payload = {"code": "from io import BytesIO\nb = BytesIO(b'Hello')\nprint(f'BytesIO content: {b.read()}')"}
+        response = await api_client.post("/run", json=payload)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert_success_response(data, "BytesIO content: b'Hello'")
+    
+    @pytest.mark.integration
+    @pytest.mark.security
     async def test_itertools_module(self, api_client: httpx.AsyncClient):
         """Test itertools module is allowed"""
         payload = {"code": "import itertools\nresult = list(itertools.combinations([1, 2, 3], 2))\nprint(f'Combinations: {result}')"}
@@ -321,6 +343,69 @@ print(result)
         assert response.status_code == 200
         data = response.json()
         assert_error_response(data, "os")
+
+
+class TestBlockedIOImports:
+    """Test cases for blocked io imports"""
+    
+    @pytest.mark.integration
+    @pytest.mark.security
+    async def test_io_open_blocked(self, api_client: httpx.AsyncClient):
+        """Test io.open is blocked"""
+        payload = {"code": "from io import open\nprint('This should not work')"}
+        response = await api_client.post("/run", json=payload)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert_error_response(data, "open")
+    
+    @pytest.mark.integration
+    @pytest.mark.security
+    async def test_io_fileio_blocked(self, api_client: httpx.AsyncClient):
+        """Test io.FileIO is blocked"""
+        payload = {"code": "from io import FileIO\nprint('This should not work')"}
+        response = await api_client.post("/run", json=payload)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert_error_response(data, "FileIO")
+    
+    @pytest.mark.integration
+    @pytest.mark.security
+    async def test_io_open_code_blocked(self, api_client: httpx.AsyncClient):
+        """Test io.open_code is blocked"""
+        payload = {"code": "from io import open_code\nprint('This should not work')"}
+        response = await api_client.post("/run", json=payload)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert_error_response(data, "open_code")
+    
+    @pytest.mark.integration
+    @pytest.mark.security
+    async def test_io_wildcard_blocked(self, api_client: httpx.AsyncClient):
+        """Test wildcard import from io is blocked"""
+        payload = {"code": "from io import *\nprint('This should not work')"}
+        response = await api_client.post("/run", json=payload)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert_error_response(data, "Wildcard import")
+    
+    @pytest.mark.integration
+    @pytest.mark.security
+    async def test_io_direct_import_blocked(self, api_client: httpx.AsyncClient):
+        """Test direct import io is blocked"""
+        payload = {"code": "import io\nprint('This should not work')"}
+        response = await api_client.post("/run", json=payload)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert_error_response(data, "Direct import of 'io' is not allowed")
+
+
+class TestClassLevelImportBlocked:
+    """Test cases for class-level import blocking"""
     
     @pytest.mark.integration
     @pytest.mark.security

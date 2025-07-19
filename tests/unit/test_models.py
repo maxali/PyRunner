@@ -159,7 +159,8 @@ print(calculate())
         assert data == {
             "code": "print('hello')",
             "timeout": 60,
-            "memory_limit": 1024
+            "memory_limit": 1024,
+            "auto_print": True
         }
     
     @pytest.mark.unit

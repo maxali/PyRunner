@@ -25,6 +25,8 @@ class TestSecurityValidator:
             "import numpy as np",
             "from collections import Counter",
             "import itertools, functools",
+            "from io import StringIO",
+            "from io import BytesIO",
         ]
         
         for code in allowed_codes:
@@ -37,16 +39,52 @@ class TestSecurityValidator:
         """Test validation of blocked imports"""
         blocked_codes = [
             "import os",
-            "import subprocess",
+            "import subprocess", 
             "import sys",
             "from os import path",
             "import socket",
+            "from io import open",
+            "from io import FileIO", 
+            "from io import open_code",
+            "from io import *",
+            "import io",
         ]
         
         for code in blocked_codes:
             is_valid, error_message = SecurityValidator.validate_code(code)
             assert not is_valid, f"Code should be blocked: {code}"
             assert error_message != ""
+    
+    @pytest.mark.unit
+    def test_granular_io_imports(self):
+        """Test granular import controls for io module"""
+        # Test allowed io imports
+        allowed_io_imports = [
+            "from io import StringIO",
+            "from io import BytesIO", 
+            "from io import TextIOWrapper",
+            "from io import BufferedReader",
+            "from io import SEEK_SET"
+        ]
+        
+        for code in allowed_io_imports:
+            is_valid, error_message = SecurityValidator.validate_code(code)
+            assert is_valid, f"Code should be allowed: {code}"
+            assert error_message == ""
+        
+        # Test blocked io imports
+        blocked_io_imports = [
+            "from io import open",
+            "from io import FileIO",
+            "from io import open_code", 
+            "from io import *",
+            "import io"
+        ]
+        
+        for code in blocked_io_imports:
+            is_valid, error_message = SecurityValidator.validate_code(code)
+            assert not is_valid, f"Code should be blocked: {code}"
+            assert "not allowed" in error_message
     
     @pytest.mark.unit
     def test_validate_builtin_functions(self):
@@ -132,7 +170,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         assert checker is not None
         assert hasattr(checker, 'visit')
@@ -145,7 +184,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         
         # Test allowed import
@@ -156,7 +196,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         blocked_import = ast.parse("import os").body[0]
         with pytest.raises(SecurityError) as exc_info:
@@ -171,7 +212,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         
         # Test allowed import from
@@ -182,7 +224,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         blocked_import = ast.parse("from os import path").body[0]
         with pytest.raises(SecurityError) as exc_info:
@@ -197,7 +240,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         
         # Test allowed function call
@@ -208,7 +252,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         blocked_call = ast.parse("__import__('os')").body[0]
         with pytest.raises(SecurityError) as exc_info:
@@ -223,7 +268,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         
         # Test allowed attribute access
@@ -234,7 +280,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         blocked_attr = ast.parse("obj.__globals__").body[0]
         with pytest.raises(SecurityError) as exc_info:
@@ -249,7 +296,8 @@ class TestSecurityChecker:
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         
         code_with_violations = """
@@ -271,7 +319,8 @@ exec('print(1)')
         checker = SecurityChecker(
             SecurityValidator.DANGEROUS_IMPORTS,
             SecurityValidator.DANGEROUS_BUILTINS,
-            SecurityValidator.ALLOWED_MODULES
+            SecurityValidator.ALLOWED_MODULES,
+            SecurityValidator.ALLOWED_MODULE_IMPORTS
         )
         
         nested_code = """
