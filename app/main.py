@@ -49,7 +49,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
+    """Root endpoint with service info"""
     return {
         "service": "PyRunner",
         "status": "healthy",
@@ -60,6 +60,12 @@ async def root():
             "libraries": ["sympy", "numpy", "pandas", "matplotlib", "scipy", "sklearn"]
         }
     }
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint for Container Apps"""
+    return {"status": "healthy"}
 
 
 @app.post("/run", response_model=ExecutionResponse)
