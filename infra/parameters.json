@@ -12,7 +12,7 @@
       "value": "ghcr.io/maxali/pyrunner:latest"
     },
     "minReplicas": {
-      "value": 1
+      "value": 0
     },
     "maxReplicas": {
       "value": 10
