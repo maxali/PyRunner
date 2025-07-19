@@ -40,11 +40,11 @@ jobs:
     
     - name: Run integration tests
       run: |
-        pytest tests/integration/ -v --tb=short --timeout=60
+        pytest tests/integration/ -v --tb=short --timeout=60 --asyncio-mode=auto
     
     - name: Generate coverage report
       run: |
-        pytest tests/ --cov=app --cov-report=xml --cov-report=html
+        pytest tests/ --cov=app --cov-report=xml --cov-report=html --asyncio-mode=auto
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -119,8 +119,8 @@ jobs:
     
     - name: Run performance tests
       run: |
-        pytest tests/integration/test_resource_limits.py::TestResourceMonitoring -v --tb=short
+        pytest tests/integration/test_resource_limits.py::TestResourceMonitoring -v --tb=short --asyncio-mode=auto
     
     - name: Run slow integration tests
       run: |
-        pytest tests/integration/ -m slow -v --tb=short --timeout=120
+        pytest tests/integration/ -m slow -v --tb=short --timeout=120 --asyncio-mode=auto
