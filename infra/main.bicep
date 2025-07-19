@@ -29,6 +29,9 @@ param memory string = '2Gi'
 @description('Environment (dev, staging, prod)')
 param environment string = 'dev'
 
+@description('Revision suffix for the container app')
+param revisionSuffix string = '${uniqueString(deployment().name)}-${utcNow('yyyyMMddHHmmss')}'
+
 // Container Apps Environment
 resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2023-05-01' = {
   name: containerAppEnvironmentName
@@ -84,7 +87,7 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
       registries: []
     }
     template: {
-      revisionSuffix: 'v${uniqueString(deployment().name)}'
+      revisionSuffix: 'v${revisionSuffix}'
       containers: [
         {
           name: containerAppName
